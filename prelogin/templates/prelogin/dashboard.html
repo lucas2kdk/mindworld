@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+    <div class="bg-gray-800 p-8 rounded-lg shadow-xl text-center mt-10">
+        <h1 class="text-3xl font-bold mb-4 text-gray-200">Welcome to the MindWorld Dashboard!</h1>
+        <p class="mb-4 text-gray-400">Hello, {{ user.get_username }}! We're thrilled to have you here.</p>
+    </div>
+
+    <div class="bg-gray-800 p-4 rounded-lg shadow-md mt-4">
+        <h2 class="text-xl font-bold mb-2 text-gray-200">Game Servers</h2>
+        <ul>
+            {% for server in game_servers %}
+                <li class="text-gray-300">{{ server.name }}</li>
+            {% empty %}
+                <li class="text-gray-500">No game servers found.</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}
