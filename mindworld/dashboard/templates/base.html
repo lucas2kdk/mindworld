@@ -8,79 +8,118 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <!-- Include Heroicons for icons -->
     <link href="https://cdn.jsdelivr.net/npm/@heroicons/react@1.0.6/dist/styles.css" rel="stylesheet">
+    <style>
+        /* Custom CSS for mobile sidebar */
+        @media (max-width: 640px) {
+            .sidebar {
+                display: none;
+            }
+            .show-sidebar {
+                display: block;
+            }
+        }
+    </style>
 </head>
 <body class="bg-gray-100">
-    <div class="flex h-screen">
+    <div class="flex flex-col min-h-screen md:flex-row">
         <!-- Sidebar -->
-        <div class="w-1/5 bg-gray-800 text-gray-100">
-            <div class="p-4">
-                <h1 class="text-lg font-semibold mb-4">Dashboard</h1>
-                <!-- Sidebar items -->
-                <ul class="space-y-2">
-                    <li>
-                        <a href="{% url 'dashboard_home' %}" class="flex items-center py-2 px-4 bg-gray-900 rounded-md transition-colors duration-300 hover:bg-gray-700">
-                            <span class="mr-2">
-                                <!-- Icon for Overview -->
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3-1m3 1l6 11m5-11l-3 16-3.5-2-3 2-3.5-2-3 2-3.5-2-3 2V6m6 15h0" />
-                                </svg>
-                            </span>
-                            Overview
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{% url 'dashboard_nodes' %}" class="flex items-center py-2 px-4 bg-gray-900 rounded-md transition-colors duration-300 hover:bg-gray-700">
-                            <span class="mr-2">
-                                <!-- Icon for Nodes -->
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                            </span>
-                            Nodes
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="flex items-center py-2 px-4 bg-gray-900 rounded-md transition-colors duration-300 hover:bg-gray-700">
-                            <span class="mr-2">
-                                <!-- Icon for Users -->
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 14l7-7 7 7M5 10v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-                                </svg>
-                            </span>
-                            Users
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="flex items-center py-2 px-4 bg-gray-900 rounded-md transition-colors duration-300 hover:bg-gray-700">
-                            <span class="mr-2">
-                                <!-- Icon for Settings -->
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </span>
-                            Settings
-                        </a>
-                    </li>
-                    <!-- New server creation item -->
-                    <li>
-                        <a href="{% url 'create_server' %}" class="flex items-center py-2 px-4 bg-gray-900 rounded-md transition-colors duration-300 hover:bg-gray-700">
-                            <span class="mr-2">
-                                <!-- Icon for New Server -->
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                </svg>
-                            </span>
-                            New Server
-                        </a>
-                    </li>
-                </ul>
+        <div class="sidebar w-full md:w-1/5 bg-gray-800 text-gray-100">
+            <div class="p-4 flex flex-col justify-between h-full">
+                <div>
+                    <h1 class="text-lg font-semibold mb-4">Mindworld Dashboard</h1>
+                    <!-- Sidebar items -->
+                    <ul class="space-y-2">
+                        <li>
+                            <a href="{% url 'dashboard_home' %}" class="flex items-center py-2 px-4 bg-gray-900 rounded-md transition-colors duration-300 hover:bg-gray-700">
+                                <span class="mr-2">
+                                    <!-- Icon for Overview -->
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3-1m3 1l6 11m5-11l-3 16-3.5-2-3 2-3.5-2-3 2-3.5-2-3 2V6m6 15h0" />
+                                    </svg>
+                                </span>
+                                Overview
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'dashboard_nodes' %}" class="flex items-center py-2 px-4 bg-gray-900 rounded-md transition-colors duration-300 hover:bg-gray-700">
+                                <span class="mr-2">
+                                    <!-- Icon for Nodes -->
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                </span>
+                                Nodes
+                            </a>
+                        </li>
+                        {% if user.is_superuser %}
+                        <li>
+                            <a href="#" class="flex items-center py-2 px-4 bg-gray-900 rounded-md transition-colors duration-300 hover:bg-gray-700">
+                                <span class="mr-2">
+                                    <!-- Icon for Users -->
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 14l7-7 7 7M5 10v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                                    </svg>
+                                </span>
+                                Users
+                            </a>
+                        </li>
+                        {% endif %}
+                        <li>
+                            <a href="#" class="flex items-center py-2 px-4 bg-gray-900 rounded-md transition-colors duration-300 hover:bg-gray-700">
+                                <span class="mr-2">
+                                    <!-- Icon for Settings -->
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </span>
+                                Settings
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'create_server' %}" class="flex items-center py-2 px-4 bg-gray-900 rounded-md transition-colors duration-300 hover:bg-gray-700">
+                                <span class="mr-2">
+                                    <!-- Icon for New Server -->
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                    </svg>
+                                </span>
+                                New Server
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- User information -->
+                <div>
+                    <div class="flex items-center mt-8">
+                        <div class="h-10 w-10 bg-gray-500 rounded-full"></div> <!-- Placeholder for Gravatar icon -->
+                        <div class="ml-3">
+                            <p class="text-sm text-gray-400">{{ user.get_username }}</p>
+                            <a href="#" class="text-sm text-gray-400 hover:text-white">Edit Profile</a>
+                        </div>
+                    </div>
+                    <!-- Logout button -->
+                    <a href="{% url 'user_logout' %}" class="block w-full text-left text-sm text-gray-400 hover:text-white mt-4">Logout</a>
+                </div>
             </div>
         </div>
+        <!-- Mobile sidebar toggle button -->
+        <button class="block md:hidden fixed bottom-4 right-4 bg-gray-900 text-gray-100 p-2 rounded-full" onclick="toggleSidebar()">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+            </svg>
+        </button>
         <!-- Main content -->
         <div class="flex-1 p-4">
             {% block content %}{% endblock %}
         </div>
     </div>
+
+    <script>
+        function toggleSidebar() {
+            var sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('show-sidebar');
+        }
+    </script>
 </body>
 </html>

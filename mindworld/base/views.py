@@ -28,7 +28,7 @@ def user_login(request):
             user = authenticate(request, username=username, password=password)
             if user:
                 login(request, user)    
-                return redirect('home')
+                return redirect('dashboard_home')
     else:
         form = LoginForm()
     return render(request, 'base/login.html', {'form': form})

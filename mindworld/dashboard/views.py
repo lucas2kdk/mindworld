@@ -4,80 +4,112 @@ from .kube_utils import get_kubernetes_nodes
 # views.py in your Django app
 from django.shortcuts import render, redirect
 from kubernetes import client, config
+from kubernetes.client import V1Namespace, V1ObjectMeta, V1Role, V1RoleBinding, V1RoleRef, V1PolicyRule
+from kubernetes.client.rest import ApiException
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 
-@csrf_exempt  # Only if you're bypassing CSRF temporarily, recommended to handle CSRF properly
 @login_required
 def create_server(request):
     if request.method == 'POST':
-        server_name = request.POST.get('serverName')
-        server_type = request.POST.get('type')
-        version = request.POST.get('version')
-        motd = request.POST.get('motd')
-        difficulty = request.POST.get('difficulty')
-        max_players = request.POST.get('maxPlayers')
-        eula = request.POST.get('eula') == 'on'
+        username = request.user.username  # Get the username of the logged-in user
+        namespace = f"{username}-namespace"  # Namespace named after the user
 
-        if eula:  # Only create if EULA is agreed upon
-            config.load_kube_config()  # Load kube config from default location, adjust for production
-            apps_v1 = client.AppsV1Api()
+        config.load_kube_config()  # Load kube config from default location
 
-            deployment = client.V1Deployment(
-                api_version="apps/v1",
-                kind="Deployment",
-                metadata=client.V1ObjectMeta(
-                    name=server_name,
-                    annotations={
-                        "minecraft-server-panel": "enabled",
-                        "created-by": request.user.username  # Assuming the user is logged in
-                    }
+        # Check if the namespace exists, and create it if not
+        try:
+            client.CoreV1Api().read_namespace(namespace)
+        except ApiException as e:
+            if e.status == 404:  # Namespace not found
+                create_namespace_with_rbac(username, namespace)
+
+        # Deployment logic as before, now specifying the namespace in deployment creation
+        deployment = client.V1Deployment(
+            api_version="apps/v1",
+            kind="Deployment",
+            metadata=client.V1ObjectMeta(
+                name=request.POST.get('serverName'),
+                annotations={
+                    "minecraft-server-panel": "enabled",
+                    "created-by": username  # Use the username as an annotation
+                }
+            ),
+            spec=client.V1DeploymentSpec(
+                replicas=1,
+                selector=client.V1LabelSelector(
+                    match_labels={"app": "minecraft-server"}
                 ),
-                spec=client.V1DeploymentSpec(
-                    replicas=1,
-                    selector=client.V1LabelSelector(
-                        match_labels={"app": "minecraft-server"}
+                template=client.V1PodTemplateSpec(
+                    metadata=client.V1ObjectMeta(
+                        labels={"app": "minecraft-server"}
                     ),
-                    template=client.V1PodTemplateSpec(
-                        metadata=client.V1ObjectMeta(
-                            labels={"app": "minecraft-server"}
-                        ),
-                        spec=client.V1PodSpec(
-                            containers=[
-                                client.V1Container(
-                                    name="minecraft",
-                                    image="itzg/minecraft-server:latest",
-                                    ports=[client.V1ContainerPort(container_port=25565)],
-                                    resources=client.V1ResourceRequirements(
-                                        limits={"cpu": "1", "memory": "1Gi"},
-                                        requests={"cpu": "500m", "memory": "500Mi"}
-                                    ),
-                                    env=[
-                                        client.V1EnvVar(name="EULA", value="true"),
-                                        client.V1EnvVar(name="TYPE", value=server_type),
-                                        client.V1EnvVar(name="VERSION", value=version),
-                                        client.V1EnvVar(name="MOTD", value=motd),
-                                        client.V1EnvVar(name="DIFFICULTY", value=difficulty),
-                                        client.V1EnvVar(name="MAX_PLAYERS", value=max_players),
-                                    ]
-                                )
-                            ]
-                        )
+                    spec=client.V1PodSpec(
+                        containers=[
+                            client.V1Container(
+                                name="minecraft",
+                                image="itzg/minecraft-server:latest",
+                                ports=[client.V1ContainerPort(container_port=25565)],
+                                env=[ # Add environment variables here as needed
+                                    client.V1EnvVar(name="EULA", value="true"),
+                                    # Additional environment variables can be added here
+                                ]
+                            )
+                        ]
                     )
                 )
             )
-            apps_v1.create_namespaced_deployment(namespace="default", body=deployment)
-            return redirect('dashboard_home')  # Redirect to a success page or back to form with a success message
-        else:
-            return render(request, 'dashboard/create_server.html', {'error': 'You must agree to the Minecraft EULA.'})
-    else:
-        return render(request, 'dashboard/create_server.html')
+        )
+        client.AppsV1Api().create_namespaced_deployment(namespace=namespace, body=deployment)
+        return redirect('dashboard_home')  # Redirect to a success page
 
+    return render(request, 'dashboard/create_server.html')
 
+def create_namespace_with_rbac(username, namespace_name):
+    config.load_kube_config()
+    core_v1_api = client.CoreV1Api()
+    rbac_api = client.RbacAuthorizationV1Api()
 
+    # Create the namespace
+    ns = client.V1Namespace(
+        metadata=client.V1ObjectMeta(name=namespace_name)
+    )
+    core_v1_api.create_namespace(ns)
+
+    # Create Role
+    role = client.V1Role(
+        metadata=client.V1ObjectMeta(namespace=namespace_name, name="namespace-manager"),
+        rules=[
+            client.V1PolicyRule(
+                api_groups=["", "apps"],
+                resources=["pods", "pods/exec", "pods/log", "deployments"],
+                verbs=["get", "list", "watch", "create", "update", "patch", "delete"]
+            )
+        ]
+    )
+    rbac_api.create_namespaced_role(namespace=namespace_name, body=role)
+
+    # Create RoleBinding
+    role_binding = client.V1RoleBinding(
+        metadata=client.V1ObjectMeta(namespace=namespace_name, name="namespace-manager-binding"),
+        subjects=[{
+            "kind": "User",
+            "name": f"{username}@example.com",  # Adjust the domain as necessary
+            "apiGroup": "rbac.authorization.k8s.io"
+        }],
+        role_ref=client.V1RoleRef(
+            kind="Role",
+            name="namespace-manager",
+            api_group="rbac.authorization.k8s.io"
+        )
+    )
+    rbac_api.create_namespaced_role_binding(namespace=namespace_name, body=role_binding)
+
+@login_required
 def dashboard_home(request):
     return render(request, 'dashboard/dashboard.html')
 
+@login_required
 def dashboard_nodes(request):
     nodes = get_kubernetes_nodes()
     return render(request, 'dashboard/nodes.html', {'nodes': nodes})
