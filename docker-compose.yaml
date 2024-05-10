@@ -12,17 +12,29 @@ services:
     ports:
       - 5432:5432
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin"]
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  app:
-    build:
-      context: ./mindworld
-      dockerfile: Dockerfile
+  redis:
+    image: redis:alpine
     ports:
-      - 8080:8000
-    depends_on:
-      db:
-        condition: service_healthy
+      - 6379:6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  #app:
+  #  build:
+  #    context: ./mindworld
+  #    dockerfile: Dockerfile
+  #  ports:
+  #    - 8080:8000
+  #  depends_on:
+  #    db:
+  #      condition: service_healthy
+  #    redis:
+  #      condition: service_healthy
