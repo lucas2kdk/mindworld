@@ -16,3 +16,23 @@ def get_kubernetes_nodes():
             'os': node.status.node_info.os_image,
         })
     return node_details
+
+def get_user_deployments(username):
+    config.load_kube_config()
+    apps_v1 = client.AppsV1Api()
+    all_deployments = apps_v1.list_deployment_for_all_namespaces()
+    user_deployments = []
+
+    for deployment in all_deployments.items:
+        annotations = deployment.metadata.annotations or {}
+        if annotations.get('created-by') == username:
+            status = 'Running' if deployment.status.available_replicas > 0 else 'Stopped'
+            user_deployments.append({
+                'name': deployment.metadata.name,
+                'namespace': deployment.metadata.namespace,
+                'replicas': deployment.spec.replicas,
+                'running_replicas': deployment.status.available_replicas,
+                'status': status
+            })
+
+    return user_deployments

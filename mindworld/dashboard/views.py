@@ -4,35 +4,39 @@ from .kube_utils import get_kubernetes_nodes
 # views.py in your Django app
 from django.shortcuts import render, redirect
 from kubernetes import client, config
-from kubernetes.client import V1Namespace, V1ObjectMeta, V1Role, V1RoleBinding, V1RoleRef, V1PolicyRule
+#from kubernetes.client import V1Namespace, V1ObjectMeta, V1Role, V1RoleBinding, V1RoleRef, V1PolicyRule
 from kubernetes.client.rest import ApiException
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_exempt
+#from django.views.decorators.csrf import csrf_exempt
 
-@login_required
+
 def create_server(request):
     if request.method == 'POST':
-        username = request.user.username  # Get the username of the logged-in user
-        namespace = f"{username}-namespace"  # Namespace named after the user
+        username = request.user.username
+        namespace = f"{username}-namespace"
+        server_name = request.POST.get('serverName', 'default-minecraft-server')
 
-        config.load_kube_config()  # Load kube config from default location
+        config.load_kube_config()
+        apps_v1_api = client.AppsV1Api()
+        core_v1_api = client.CoreV1Api()
 
-        # Check if the namespace exists, and create it if not
+        # Check if the namespace exists
         try:
-            client.CoreV1Api().read_namespace(namespace)
+            core_v1_api.read_namespace(name=namespace)
         except ApiException as e:
             if e.status == 404:  # Namespace not found
                 create_namespace_with_rbac(username, namespace)
 
-        # Deployment logic as before, now specifying the namespace in deployment creation
-        deployment = client.V1Deployment(
+        # Define the deployment
+        deployment_body = client.V1Deployment(
             api_version="apps/v1",
             kind="Deployment",
             metadata=client.V1ObjectMeta(
-                name=request.POST.get('serverName'),
+                name=server_name,
+                namespace=namespace,
                 annotations={
                     "minecraft-server-panel": "enabled",
-                    "created-by": username  # Use the username as an annotation
+                    "created-by": username
                 }
             ),
             spec=client.V1DeploymentSpec(
@@ -50,20 +54,33 @@ def create_server(request):
                                 name="minecraft",
                                 image="itzg/minecraft-server:latest",
                                 ports=[client.V1ContainerPort(container_port=25565)],
-                                env=[ # Add environment variables here as needed
-                                    client.V1EnvVar(name="EULA", value="true"),
-                                    # Additional environment variables can be added here
-                                ]
+                                env=[client.V1EnvVar(name="EULA", value="true")],
+                                resources=client.V1ResourceRequirements(
+                                    requests={"cpu": "500m", "memory": "500Mi"},
+                                    limits={"cpu": "1", "memory": "1Gi"}
+                                )
                             )
                         ]
                     )
                 )
             )
         )
-        client.AppsV1Api().create_namespaced_deployment(namespace=namespace, body=deployment)
-        return redirect('dashboard_home')  # Redirect to a success page
+
+        # Create or update the deployment
+        try:
+            apps_v1_api.create_namespaced_deployment(namespace=namespace, body=deployment_body)
+            print("Deployment created successfully.")
+        except ApiException as e:
+            print("Error creating deployment:", e)
+            return render(request, 'dashboard/create_server.html', {'error': str(e)})
+
+        return redirect('dashboard_home')
 
     return render(request, 'dashboard/create_server.html')
+
+
+from kubernetes import client, config
+from kubernetes.client.rest import ApiException
 
 def create_namespace_with_rbac(username, namespace_name):
     config.load_kube_config()
@@ -74,9 +91,14 @@ def create_namespace_with_rbac(username, namespace_name):
     ns = client.V1Namespace(
         metadata=client.V1ObjectMeta(name=namespace_name)
     )
-    core_v1_api.create_namespace(ns)
+    try:
+        core_v1_api.create_namespace(ns)
+        print(f"Namespace {namespace_name} created successfully.")
+    except ApiException as e:
+        if e.status != 409:  # Ignore error if namespace already exists
+            raise
 
-    # Create Role
+    # Define and create a Role
     role = client.V1Role(
         metadata=client.V1ObjectMeta(namespace=namespace_name, name="namespace-manager"),
         rules=[
@@ -89,12 +111,12 @@ def create_namespace_with_rbac(username, namespace_name):
     )
     rbac_api.create_namespaced_role(namespace=namespace_name, body=role)
 
-    # Create RoleBinding
+    # Define and create a RoleBinding
     role_binding = client.V1RoleBinding(
         metadata=client.V1ObjectMeta(namespace=namespace_name, name="namespace-manager-binding"),
         subjects=[{
             "kind": "User",
-            "name": f"{username}@example.com",  # Adjust the domain as necessary
+            "name": f"{username}@example.com",  # Customize the user's domain as necessary
             "apiGroup": "rbac.authorization.k8s.io"
         }],
         role_ref=client.V1RoleRef(
@@ -104,6 +126,9 @@ def create_namespace_with_rbac(username, namespace_name):
         )
     )
     rbac_api.create_namespaced_role_binding(namespace=namespace_name, body=role_binding)
+    print(f"RoleBinding 'namespace-manager-binding' created for {username}.")
+
+
 
 @login_required
 def dashboard_home(request):
