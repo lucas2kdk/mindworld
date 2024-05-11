@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="flex-1 p-4">
-    <h1 class="text-xl font-semibold mb-4">Minecraft Servers</h1>
+    <h1 class="text-2xl font-semibold mb-4">Minecraft Servers</h1>
     <div id="server-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         <!-- Server cards will be dynamically inserted here -->
     </div>    
@@ -16,55 +16,51 @@
         const webSocket = new WebSocket(wsScheme + window.location.host + '/ws/servers/');
     
         webSocket.onmessage = function(e) {
-            console.log("Received data:", e.data);  // Ensure data is as expected
+            console.log("Received data:", e.data);  // Log for debugging
             try {
                 const data = JSON.parse(e.data);
                 if (data.type === 'server.status') {
                     updateServerCards(data.data);
                 }
             } catch (error) {
-                console.error('Error parsing data:', error, e.data);
+                console.error('Error parsing data:', error);
             }
         };
-        
     
         function updateServerCards(servers) {
             const container = document.getElementById('server-container');
             container.innerHTML = '';  // Clear existing content
             servers.forEach(server => {
-                try {
-                    const serverCard = document.createElement('div');
-                    serverCard.className = 'bg-white rounded-md p-4 shadow-md';
-                    let buttonHTML = '';
-        
-                    if (server.status === 'Running') {
-                        buttonHTML = `<a href="/dashboard/stop-server/${server.namespace}/${server.name}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2">Stop</a>`;
-                    } else {
-                        buttonHTML = `<a href="/dashboard/start-server/${server.namespace}/${server.name}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Start</a>`;
-                    }
-        
-                    serverCard.innerHTML = `
-                        <h2 class="text-lg font-semibold mb-2">${server.name}</h2>
-                        <p>Status: <span class="${server.status === 'Running' ? 'text-green-600' : 'text-red-600'}">${server.status}</span></p>
-                        <p>Replicas: ${server.running_replicas}/${server.replicas}</p>
-                        <div class="flex justify-end mt-4">
-                            ${buttonHTML}
-                            <button class="bg-grey-500 hover:bg-grey-700 text-white font-bold py-2 px-4 rounded">Edit</button>
-                        </div>
-                    `;
-                    container.appendChild(serverCard);
-                } catch (error) {
-                    console.error('Error processing server data:', error, server);
+                const serverCard = document.createElement('div');
+                serverCard.className = 'bg-white rounded-lg shadow p-4 flex flex-col justify-between h-full';
+                let buttonHTML = '';
+    
+                if (server.status === 'Running') {
+                    buttonHTML = `<a href="/dashboard/stop-server/${server.namespace}/${server.name}" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Stop</a>`;
+                } else {
+                    buttonHTML = `<a href="/dashboard/start-server/${server.namespace}/${server.name}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Start</a>`;
                 }
+    
+                serverCard.innerHTML = `
+                    <div>
+                        <h2 class="text-lg font-semibold">${server.name}</h2>
+                        <p class="text-sm text-gray-700">Status: <span class="${server.status === 'Running' ? 'text-green-500' : 'text-red-500'}">${server.status}</span></p>
+                        <p class="text-sm text-gray-700">Replicas: ${server.running_replicas}/${server.replicas}</p>
+                    </div>
+                    <div class="mt-4 flex gap-2">
+                        ${buttonHTML}
+                        <a href="#" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Edit</a>
+                    </div>
+                `;
+                container.appendChild(serverCard);
             });
         }
-        
     
         webSocket.onclose = function(e) {
             console.error('WebSocket closed unexpectedly');
         };
     });
-    </script>
+</script>
     
     
     

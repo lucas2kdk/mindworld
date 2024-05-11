@@ -5,31 +5,27 @@ from channels.db import database_sync_to_async
 from .kube_utils import get_kubernetes_nodes, get_user_deployments, get_all_deployment_statuses
 import logging
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 class NodeInfoConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.accepted = False
         await self.accept()
-        self.accepted = True
-        self.task = asyncio.get_event_loop().create_task(self.send_node_data())
+        self.task = asyncio.create_task(self.send_node_data())
 
     async def disconnect(self, close_code):
-        # Cancel the background task
-        self.accepted = False
         if self.task:
             self.task.cancel()
-        await self.task
+            await self.task  # Ensure the task cancellation is awaited
 
     async def send_node_data(self):
         try:
-            while self.accepted:
-                node_data = get_kubernetes_nodes()
-                print(f"Sending node data: {node_data}")  # Debugging statement
+            while True:
+                node_data = await database_sync_to_async(get_kubernetes_nodes)()
+                logger.info(f"Sending node data: {node_data}")  # Use logger instead of print
                 await self.send(json.dumps({'nodes': node_data}))
                 await asyncio.sleep(10)  # Update interval
         except asyncio.CancelledError:
-            # Task was cancelled, exit gracefully
-            pass
+            logger.info("Node data sending task was cancelled")
 
     async def receive(self, text_data=None, bytes_data=None):
         # Handle incoming messages (if necessary for your application)
@@ -47,31 +43,30 @@ class ServerStatusConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         if self.task:
             self.task.cancel()
-
-    # Example snippet in your Django Channels consumer
-    async def send_deployment_status_update(self):
-        message = {
-            'type': 'server.status.update',
-            'data': get_all_deployment_statuses()
-        }
-        await self.channel_layer.group_send('deployment_status_group', {
-            'type': 'websocket.send',
-            'text': json.dumps(message)
-        })
-
+            await self.task  # Ensure the task cancellation is awaited
 
     async def send_server_status(self):
         try:
             while True:
                 deployments = await self.get_deployments(self.scope["user"].username)
-                logging.info(f"Deployments fetched: {deployments}")  # Log fetched data
+                logger.info(f"Deployments fetched: {deployments}")  # Log fetched data
                 await self.send(json.dumps({'type': 'server.status', 'data': deployments}))
                 await asyncio.sleep(10)
         except asyncio.CancelledError:
-            pass
+            logger.info("Server status update task was cancelled")
 
     @database_sync_to_async
     def get_deployments(self, username):
-        deployments = get_user_deployments(username)
-        logging.info(f"Fetching deployments for {username}: {deployments}")  # Log fetching process
-        return deployments
+        return get_user_deployments(username)
+
+    # If you need to broadcast updates to a group, you should set up a group in `connect` and use it here
+    async def broadcast_deployment_status(self):
+        deployments = await self.get_deployments(self.scope["user"].username)
+        message = {
+            'type': 'server.status.update',
+            'data': deployments
+        }
+        await self.channel_layer.group_send('deployment_status_group', {
+            'type': 'websocket.send',
+            'text': json.dumps(message)
+        })
