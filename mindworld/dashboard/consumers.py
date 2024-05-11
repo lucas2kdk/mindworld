@@ -2,7 +2,7 @@ import asyncio
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
-from .kube_utils import get_kubernetes_nodes, get_user_deployments
+from .kube_utils import get_kubernetes_nodes, get_user_deployments, get_all_deployment_statuses
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -47,6 +47,18 @@ class ServerStatusConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         if self.task:
             self.task.cancel()
+
+    # Example snippet in your Django Channels consumer
+    async def send_deployment_status_update(self):
+        message = {
+            'type': 'server.status.update',
+            'data': get_all_deployment_statuses()
+        }
+        await self.channel_layer.group_send('deployment_status_group', {
+            'type': 'websocket.send',
+            'text': json.dumps(message)
+        })
+
 
     async def send_server_status(self):
         try:

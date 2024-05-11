@@ -1,13 +1,9 @@
-from django.shortcuts import render
-from .kube_utils import get_kubernetes_nodes
-
-# views.py in your Django app
 from django.shortcuts import render, redirect
 from kubernetes import client, config
-#from kubernetes.client import V1Namespace, V1ObjectMeta, V1Role, V1RoleBinding, V1RoleRef, V1PolicyRule
 from kubernetes.client.rest import ApiException
 from django.contrib.auth.decorators import login_required
-#from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponseRedirect
+from .kube_utils import get_kubernetes_nodes
 
 
 def create_server(request):
@@ -79,8 +75,35 @@ def create_server(request):
     return render(request, 'dashboard/create_server.html')
 
 
-from kubernetes import client, config
-from kubernetes.client.rest import ApiException
+def stop_server(request, namespace, deployment_name):
+    config.load_kube_config()
+    apps_v1_api = client.AppsV1Api()
+
+    # Patch the deployment to set replicas to 0
+    body = {'spec': {'replicas': 0}}
+    try:
+        apps_v1_api.patch_namespaced_deployment_scale(deployment_name, namespace, body)
+        print(f"Deployment {deployment_name} in {namespace} stopped successfully.")
+    except ApiException as e:
+        print(f"Failed to stop deployment: {e}")
+        # Optionally, redirect to an error handling page or display an error message
+
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
+def start_server(request, namespace, deployment_name):
+    config.load_kube_config()
+    apps_v1_api = client.AppsV1Api()
+
+    # Patch the deployment to set replicas to 1
+    body = {'spec': {'replicas': 1}}
+    try:
+        apps_v1_api.patch_namespaced_deployment_scale(deployment_name, namespace, body)
+        print(f"Deployment {deployment_name} in {namespace} started successfully.")
+    except ApiException as e:
+        print(f"Failed to start deployment: {e}")
+        # Optionally, redirect to an error handling page or display an error message
+
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
 def create_namespace_with_rbac(username, namespace_name):
     config.load_kube_config()
@@ -129,10 +152,10 @@ def create_namespace_with_rbac(username, namespace_name):
     print(f"RoleBinding 'namespace-manager-binding' created for {username}.")
 
 
-
 @login_required
 def dashboard_home(request):
     return render(request, 'dashboard/dashboard.html')
+
 
 @login_required
 def dashboard_nodes(request):

@@ -17,6 +17,24 @@ def get_kubernetes_nodes():
         })
     return node_details
 
+def get_all_deployment_statuses():
+    config.load_kube_config()
+    apps_v1 = client.AppsV1Api()
+    all_deployments = apps_v1.list_deployment_for_all_namespaces()
+    deployment_statuses = []
+
+    for deployment in all_deployments.items:
+        status = 'Running' if deployment.status.available_replicas > 0 else 'Stopped'
+        deployment_statuses.append({
+            'name': deployment.metadata.name,
+            'namespace': deployment.metadata.namespace,
+            'status': status,
+            'replicas': deployment.spec.replicas,
+            'running_replicas': deployment.status.available_replicas
+        })
+
+    return deployment_statuses
+
 def get_user_deployments(username):
     config.load_kube_config()
     apps_v1 = client.AppsV1Api()

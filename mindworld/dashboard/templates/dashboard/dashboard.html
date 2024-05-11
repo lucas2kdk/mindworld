@@ -16,37 +16,56 @@
         const webSocket = new WebSocket(wsScheme + window.location.host + '/ws/servers/');
     
         webSocket.onmessage = function(e) {
-            console.log("Received data:", e.data);  // Log the received data for debugging
-            const data = JSON.parse(e.data);
-            if (data.type === 'server.status') {
-                updateServerCards(data.data);
+            console.log("Received data:", e.data);  // Ensure data is as expected
+            try {
+                const data = JSON.parse(e.data);
+                if (data.type === 'server.status') {
+                    updateServerCards(data.data);
+                }
+            } catch (error) {
+                console.error('Error parsing data:', error, e.data);
             }
         };
+        
     
         function updateServerCards(servers) {
             const container = document.getElementById('server-container');
             container.innerHTML = '';  // Clear existing content
             servers.forEach(server => {
-                const serverCard = document.createElement('div');
-                serverCard.className = 'bg-white rounded-md p-4 shadow-md';
-                serverCard.innerHTML = `
-                    <h2 class="text-lg font-semibold mb-2">${server.name}</h2>
-                    <p>Status: <span class="${server.status === 'Running' ? 'text-green-600' : 'text-red-600'}">${server.status}</span></p>
-                    <p>Replicas: ${server.running_replicas}/${server.replicas}</p>
-                    <div class="flex justify-end mt-4">
-                        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2">${server.status === 'Running' ? 'Stop' : 'Start'}</button>
-                        <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Edit</button>
-                    </div>
-                `;
-                container.appendChild(serverCard);
+                try {
+                    const serverCard = document.createElement('div');
+                    serverCard.className = 'bg-white rounded-md p-4 shadow-md';
+                    let buttonHTML = '';
+        
+                    if (server.status === 'Running') {
+                        buttonHTML = `<a href="/dashboard/stop-server/${server.namespace}/${server.name}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2">Stop</a>`;
+                    } else {
+                        buttonHTML = `<a href="/dashboard/start-server/${server.namespace}/${server.name}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Start</a>`;
+                    }
+        
+                    serverCard.innerHTML = `
+                        <h2 class="text-lg font-semibold mb-2">${server.name}</h2>
+                        <p>Status: <span class="${server.status === 'Running' ? 'text-green-600' : 'text-red-600'}">${server.status}</span></p>
+                        <p>Replicas: ${server.running_replicas}/${server.replicas}</p>
+                        <div class="flex justify-end mt-4">
+                            ${buttonHTML}
+                            <button class="bg-grey-500 hover:bg-grey-700 text-white font-bold py-2 px-4 rounded">Edit</button>
+                        </div>
+                    `;
+                    container.appendChild(serverCard);
+                } catch (error) {
+                    console.error('Error processing server data:', error, server);
+                }
             });
         }
+        
     
         webSocket.onclose = function(e) {
             console.error('WebSocket closed unexpectedly');
         };
     });
-</script>
+    </script>
+    
     
     
 {% endblock %}
