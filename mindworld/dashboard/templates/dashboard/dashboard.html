@@ -16,11 +16,18 @@
         const webSocket = new WebSocket(wsScheme + window.location.host + '/ws/servers/');
     
         webSocket.onmessage = function(e) {
-            console.log("Received data:", e.data);  // Log for debugging
+            console.log("Received data:", e.data);
             try {
                 const data = JSON.parse(e.data);
-                if (data.type === 'server.status') {
-                    updateServerCards(data.data);
+                console.log("Parsed data:", data);
+                if (data.type === 'resource.status') {
+                    if (data.data.length > 0) {
+                        updateServerCards(data.data);
+                    } else {
+                        displayNoDataMessage();
+                    }
+                } else {
+                    console.log('No data or incorrect type received', data);
                 }
             } catch (error) {
                 console.error('Error parsing data:', error);
@@ -49,18 +56,30 @@
                     </div>
                     <div class="mt-4 flex gap-2">
                         ${buttonHTML}
-                        <a href="#" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Edit</a>
+                        <a href="/dashboard/edit-server/${server.namespace}/${server.name}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Edit</a>
                     </div>
                 `;
                 container.appendChild(serverCard);
             });
         }
     
+        function displayNoDataMessage() {
+            const container = document.getElementById('server-container');
+            container.innerHTML = '<div class="text-gray-700 text-center">No servers available or you do not have permission to view them.</div>';
+        }
+    
         webSocket.onclose = function(e) {
-            console.error('WebSocket closed unexpectedly');
+            console.error('WebSocket closed unexpectedly:', e.reason);
+        };
+    
+        webSocket.onerror = function(error) {
+            console.error('WebSocket error:', error);
         };
     });
+    
 </script>
+
+
     
     
     

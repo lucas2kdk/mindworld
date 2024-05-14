@@ -7,4 +7,5 @@ urlpatterns = [
     path('create_server', views.create_server, name='create_server'),
     path('start-server/<str:namespace>/<str:deployment_name>/', views.start_server, name='start_server'),
     path('stop-server/<str:namespace>/<str:deployment_name>/', views.stop_server, name='stop_server'),
+    path('edit-server/<str:namespace>/<str:deployment_name>/', views.edit_server, name='edit_server'),
 ]
