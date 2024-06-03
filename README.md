@@ -99,7 +99,7 @@ The project aims to create a Kubernetes-based game server hosting panel similar 
     - Endpoint: PUT /api/game-servers/:id/files
     - Description: Edit files within the specified game server.
 
-###Frontend Development
+### Frontend Development
 #### Best Practices
 - Component-Based Architecture: Develop reusable and modular components.
 - State Management: Use a state management library like Redux or Context API for efficient state handling.
