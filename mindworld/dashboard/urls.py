@@ -1,10 +1,18 @@
+# urls.py
 from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.dashboard_home, name='dashboard_home'),
-    path('nodes/', views.dashboard_nodes, name='dashboard_nodes'),
-    path('create_server', views.create_server, name='create_server'),
-    path('start-server/<str:namespace>/<str:deployment_name>/', views.start_server, name='start_server'),
-    path('stop-server/<str:namespace>/<str:deployment_name>/', views.stop_server, name='stop_server'),
+    path('', views.home, name='home'),
+    path('signup/', views.user_signup, name='user_signup'),
+    path('login/', views.user_login, name='user_login'),
+    path('create-server/', views.create_server, name='create_server'),
+    path('stop-server/<str:namespace>/<str:name>/', views.stop_server, name='stop_server'),
+    path('start-server/<str:namespace>/<str:name>/', views.start_server, name='start_server'),
+    path('restart-server/<str:namespace>/<str:name>/', views.restart_server, name='restart_server'),
+    path('edit-server/<str:namespace>/<str:name>/', views.edit_server, name='edit_server'),
+    path('manage-server/<str:namespace>/<str:name>/<str:action>/', views.manage_server, name='manage_server'),
+    path('api/server-status/', views.get_server_status, name='get_server_status'),
+    path('nodes/', views.nodes, name='nodes'),
+
 ]

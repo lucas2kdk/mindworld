@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'dashboard/base.html' %}
 
 {% block title %}Create Minecraft Server{% endblock %}
 
@@ -13,43 +13,10 @@
             <input type="text" id="serverName" name="serverName" placeholder="Enter server name" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
         </div>
 
-        <!-- Server Type -->
+        <!-- Memory Allocation -->
         <div class="mb-4">
-            <label for="type" class="block text-sm font-medium text-gray-700">Server Type</label>
-            <select id="type" name="type" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                <option value="VANILLA">Vanilla</option>
-                <option value="FORGE">Forge</option>
-                <option value="BUKKIT">Bukkit</option>
-                <!-- Add more types as needed -->
-            </select>
-        </div>
-
-        <!-- Minecraft Version -->
-        <div class="mb-4">
-            <label for="version" class="block text-sm font-medium text-gray-700">Minecraft Version</label>
-            <select id="version" name="version" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                <option value="LATEST">Latest</option>
-                <option value="1.17">1.17</option>
-                <option value="1.16.5">1.16.5</option>
-                <!-- Add other versions as needed -->
-            </select>
-        </div>
-
-        <!-- MOTD -->
-        <div class="mb-4">
-            <label for="motd" class="block text-sm font-medium text-gray-700">Server MOTD (Message of the Day)</label>
-            <input type="text" id="motd" name="motd" placeholder="Welcome to our Minecraft server!" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-        </div>
-
-        <!-- Difficulty -->
-        <div class="mb-4">
-            <label for="difficulty" class="block text-sm font-medium text-gray-700">Difficulty</label>
-            <select id="difficulty" name="difficulty" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                <option value="peaceful">Peaceful</option>
-                <option value="easy">Easy</option>
-                <option value="normal">Normal</option>
-                <option value="hard">Hard</option>
-            </select>
+            <label for="memory" class="block text-sm font-medium text-gray-700">Memory Allocation</label>
+            <input type="text" id="memory" name="memory" placeholder="Specify memory allocation (e.g., 2G)" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
         </div>
 
         <!-- Max Players -->
@@ -64,8 +31,6 @@
                 <input type="checkbox" id="eula" name="eula" class="form-checkbox h-5 w-5 text-blue-600" required><span class="ml-2 text-gray-700">I agree to the Minecraft EULA.</span>
             </label>
         </div>
-
-        <!-- Additional fields (Nether, Achievements, Command Block, etc.) can be added similarly -->
 
         <!-- Submit Button -->
         <div class="flex items-center justify-end">

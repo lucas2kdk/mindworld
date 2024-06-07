@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "dashboard/base.html" %}
 
 {% block title %}Dashboard{% endblock %}
 
@@ -36,9 +36,9 @@
                 let buttonHTML = '';
     
                 if (server.status === 'Running') {
-                    buttonHTML = `<a href="/dashboard/stop-server/${server.namespace}/${server.name}" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Stop</a>`;
+                    buttonHTML = `<a href="/stop-server/${server.namespace}/${server.name}/" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Stop</a>`;
                 } else {
-                    buttonHTML = `<a href="/dashboard/start-server/${server.namespace}/${server.name}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Start</a>`;
+                    buttonHTML = `<a href="/start-server/${server.namespace}/${server.name}/" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Start</a>`;
                 }
     
                 serverCard.innerHTML = `
@@ -49,7 +49,7 @@
                     </div>
                     <div class="mt-4 flex gap-2">
                         ${buttonHTML}
-                        <a href="#" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Edit</a>
+                        <a href="/edit-server/${server.namespace}/${server.name}/" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Edit</a>
                     </div>
                 `;
                 container.appendChild(serverCard);
@@ -61,7 +61,4 @@
         };
     });
 </script>
-    
-    
-    
 {% endblock %}

@@ -1,176 +1,100 @@
-# Product Design Specification
-## Kubernetes-Based Game Server Hosting Panel
+# Mindworld
 
-### Project Overview
-The project aims to create a Kubernetes-based game server hosting panel similar to Pterodactyl. The panel will allow users to create, manage, and interact with game servers seamlessly. The primary features will include:
-- Creating new game servers using different Docker images.
-- Managing game servers with functionalities such as start, stop, edit settings, TTY console access, and file management.
-- Providing a user-friendly interface for easy navigation and server management.
-- Ensuring secure authentication and authorization mechanisms.
-- Planning for future enhancements and scalability.
+Kubernetes Native Gaming Hosting Panel
 
-### Features
+Mindworld is a powerful and intuitive hosting panel designed to manage gaming servers on a Kubernetes cluster. It provides seamless integration with various Kubernetes features, making it easy to deploy, manage, and scale gaming servers.
 
-#### Create New Game Servers
-**Functionality:** Users can create game servers by selecting from different Docker images.  
-**Details:** Users will define Kubernetes Pod specifications for each game server, including CPU, memory, and storage requirements.
+## Table of Contents
 
-**Test Requirements:**
-1. Verify that users can select from a list of available Docker images.
-2. Ensure that users can specify CPU, memory, and storage requirements.
-3. Validate that the game server is created with the specified Kubernetes Pod configurations.
+- [Mindworld](#mindworld)
+  - [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Requirements](#requirements)
+  - [Roadmap](#roadmap)
+    - [Things That Need Doing](#things-that-need-doing)
+    - [Recently Implemented](#recently-implemented)
+    - [Known issues](#known-issues)
+  - [Contributing](#contributing)
+  - [License](#license)
 
-#### Manage Game Servers
-- **TTY Console Access:** Provide direct console access to each game server.
-- **Start/Stop Servers:** Enable starting and stopping of game servers.
-- **Edit Settings:** Allow users to modify game server configurations and settings.
-- **File Management:** Provide functionalities to read, view, and edit files within game servers.
-- **Delete Servers:** Allow users to delete game servers when they are no longer needed.
+## Features
 
-**Test Requirements:**
-1. Verify TTY console access functionality for each game server.
-2. Ensure that users can start and stop game servers.
-3. Validate that users can edit and save game server settings.
-4. Check file management capabilities, including reading, viewing, and editing files.
-5. Confirm that users can delete game servers and that the resources are freed up.
+- **Console Access**: Direct access to the server console for management and troubleshooting.
+- **Node Overview**: Detailed view of all nodes within the cluster, including resource usage and status.
+- **Redis**: In-memory data structure store, used as a database, cache, and message broker.
+- **PostgreSQL**: Advanced, open-source relational database.
+- **User Authentication**: Secure login and user management.
+- **CI/CD**: Continuous Integration and Continuous Deployment pipelines.
+- **RBAC**: Role-Based Access Control for fine-grained access management.
+- **SSO/OAuth**: Single Sign-On and OAuth support for user authentication.
+- **Helm Charts**: Pre-configured Helm charts for easy deployment.
 
-#### User-Friendly Interface
-**Frontend Framework:** Use TailwindCSS for developing a modern and intuitive interface.  
-**API Integration:** Ensure seamless integration between the frontend and backend API for efficient server management.
+## Requirements
 
-**Test Requirements:**
-1. Ensure that the user interface is responsive and intuitive.
-2. Validate that the frontend correctly communicates with the backend API.
-3. Verify that all user actions in the frontend result in the appropriate backend operations.
+- Kubernetes cluster
+- Helm installed on your local machine
+- Access to a Redis instance
+- Access to a PostgreSQL instance
 
-#### Future Enhancements
-**Scalability:** Plan for future scalability to accommodate more users and game servers.  
-**New Features:** Consider adding advanced features like automated backups, performance monitoring, and alert systems.
+## Roadmap
 
-### Application Architecture
+### Things That Need Doing
 
-#### Architectural Diagram
-```plaintext
-+-------------------+      +--------------------+      +-------------------+
-|   User Interface  | <--> |   Backend API      | <--> |   Kubernetes      |
-| (React + Tailwind)|      | (Node.js, Express) |      |   Cluster         |
-+-------------------+      +--------------------+      +-------------------+
-        |                        |                          |
-        v                        v                          v
-+-------------------+    +--------------------+      +-------------------+
-| Authentication    |    |    Database        |      | Docker Images     |
-| Service (OAuth2)  |    |  (PostgreSQL)      |      +-------------------+
-+-------------------+    +--------------------+
-```
-#### Component Descriptions
+- Redis Integration
+- PostgreSQL Integration
+- User Authentication
+- CI/CD Implementation
+- RBAC Configuration
+- SSO/OAuth Support
+- Helm Charts Creation
+- Editing of servers
+- File Browser
+- File Editor
+- SFTP support?
+  - Considering if this is the right thing to do, or if there's something smarter.
 
-- User Interface: A React application styled with TailwindCSS, providing an intuitive and responsive user experience.
-- Backend API: A Node.js application using Express framework, handling requests from the frontend and interacting with the Kubernetes cluster.
-- Kubernetes Cluster: Manages the lifecycle of game server pods using predefined specifications.
-- Authentication Service: OAuth2-based service for secure user authentication and authorization.
-- Database: PostgreSQL database to store user data, game server configurations, and other relevant information.
-- Docker Images: Predefined Docker images for different game servers, pulled from a container registry.
+### Recently Implemented
 
-### Backend API Development
-#### Main Endpoints
-- Create Game Server
-    - Endpoint: POST /api/game-servers
-    - Description: Create a new game server with specified configurations.
-- Start Game Server
-    - Endpoint: POST /api/game-servers/:id/start
-    - Description: Start the specified game server.
-- Stop Game Server
-    - Endpoint: POST /api/game-servers/:id/stop
-    - Description: Stop the specified game server.
-- Edit Game Server
-    - Endpoint: PUT /api/game-servers/:id
-    - Description: Update settings and configurations of the specified game server.
-- Delete Game Server
-    - Endpoint: DELETE /api/game-servers/:id
-    - Description: Delete the specified game server.
-- TTY Console Access
-    - Endpoint: GET /api/game-servers/:id/tty
-    - Description: Provide TTY console access to the specified game server.
-- File Management
-    - Endpoint: GET /api/game-servers/:id/files
-    - Description: Retrieve files from the specified game server.
-    - Endpoint: POST /api/game-servers/:id/files
-    - Description: Upload files to the specified game server.
-    - Endpoint: PUT /api/game-servers/:id/files
-    - Description: Edit files within the specified game server.
+- Console Access
+- Reimplemented Nodes Overview
 
-### Frontend Development
-#### Best Practices
-- Component-Based Architecture: Develop reusable and modular components.
-- State Management: Use a state management library like Redux or Context API for efficient state handling.
-- Responsive Design: Ensure the interface is responsive and works well on various devices.
-- Accessibility: Follow accessibility best practices to make the application usable for all users.
-- Example Component: Create Game Server
 
-``` javascript
-import React, { useState } from 'react';
-import axios from 'axios';
+### Known issues
+- Console web socket shutsdown and recloses sometimes
+- Console web socket sometimes recieve exit commands
+- Console web socket does not close correctly.
+  - If running locally, you have to exit via the Process Manager.
 
-const CreateGameServer = () => {
-    const [name, setName] = useState('');
-    const [image, setImage] = useState('');
-    const [cpu, setCpu] = useState('');
-    const [memory, setMemory] = useState('');
-    const [storage, setStorage] = useState('');
+## Contributing
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await axios.post('/api/game-servers', {
-                name,
-                image,
-                cpu,
-                memory,
-                storage,
-            });
-            alert('Game server created successfully!');
-        } catch (error) {
-            console.error('Error creating game server:', error);
-            alert('Failed to create game server.');
-        }
-    };
+We welcome contributions from the community. To contribute:
 
-    return (
-        <form onSubmit={handleSubmit}>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Server Name" required />
-            <input type="text" value={image} onChange={(e) => setImage(e.target.value)} placeholder="Docker Image" required />
-            <input type="text" value={cpu} onChange={(e) => setCpu(e.target.value)} placeholder="CPU" required />
-            <input type="text" value={memory} onChange={(e) => setMemory(e.target.value)} placeholder="Memory" required />
-            <input type="text" value={storage} onChange={(e) => setStorage(e.target.value)} placeholder="Storage" required />
-            <button type="submit">Create Server</button>
-        </form>
-    );
-};
+1. Fork the repository.
+2. Create a new branch for your feature or bug fix.
+3. Implement your changes and commit them with clear and concise messages.
+4. Submit a pull request with a detailed description of your changes.
 
-export default CreateGameServer;
+## License
 
-```
+MIT License
 
-### Test Requirements
+Copyright (c) [year] Mindworld
 
-#### Create New Game Servers
-1. Verify that users can select from a list of available Docker images.
-2. Ensure that users can specify CPU, memory, and storage requirements.
-3. Validate that the game server is created with the specified Kubernetes Pod configurations.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-#### Manage Game Servers
-1. Verify TTY console access functionality for each game server.
-2. Ensure that users can start and stop game servers.
-3. Validate that users can edit and save game server settings.
-4. Check file management capabilities, including reading, viewing, and editing files.
-5. Confirm that users can delete game servers and that the resources are freed up.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-#### User-Friendly Interface
-1. Ensure that the user interface is responsive and intuitive.
-2. Validate that the frontend correctly communicates with the backend API.
-3. Verify that all user actions in the frontend result in the appropriate backend operations.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
-#### Authentication and Authorization
-1. Verify that only authenticated users can access the application.
-2. Ensure that users have appropriate permissions for the actions they perform.
-3. Validate that unauthorized access is properly restricted.

@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "dashboard/base.html" %}
 
 {% block title %}Kubernetes Nodes{% endblock %}
 
@@ -10,39 +10,46 @@
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const nodesContainer = document.getElementById('nodes-container');
-    const wsScheme = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-    const ws = new WebSocket(wsScheme + window.location.host + '/ws/nodes/');
-
-    ws.onmessage = function(event) {
-        const data = JSON.parse(event.data);
-        nodesContainer.innerHTML = '';  // Clear existing nodes
-
-        data.nodes.forEach(node => {
-            const nodeDiv = document.createElement('div');
-            nodeDiv.className = 'bg-white rounded-lg shadow p-4';
-            nodeDiv.innerHTML = `
-                <div class="space-y-2">
-                    <h2 class="text-lg font-semibold">${node.name}</h2>
-                    <p>Status: <span class="${node.status === 'Ready' ? 'text-green-500' : 'text-red-500'}">${node.status}</span></p>
-                    <p>Pods: ${node.pods}</p>
-                    <p>IP: ${node.ip}</p>
-                    <p>OS: ${node.os}</p>
-                </div>
-            `;
-            nodesContainer.appendChild(nodeDiv);
-        });
-    };
-
-    ws.onclose = function(e) {
-        console.log('WebSocket connection closed unexpectedly');
-    };
-
-    ws.onerror = function(error) {
-        console.error('WebSocket error:', error);
-    };
-});
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+        const wsScheme = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        const webSocket = new WebSocket(wsScheme + window.location.host + '/ws/nodes/');
+    
+        webSocket.onmessage = function(e) {
+            console.log("Received data:", e.data);  // Log for debugging
+            try {
+                const data = JSON.parse(e.data);
+                if (data.type === 'node.status') {
+                    updateNodes(data.data);
+                }
+            } catch (error) {
+                console.error('Error parsing data:', error);
+            }
+        };
+    
+        function updateNodes(nodes) {
+            const container = document.getElementById('nodes-container');
+            container.innerHTML = '';  // Clear existing content
+            nodes.forEach(node => {
+                const nodeCard = document.createElement('div');
+                nodeCard.className = 'bg-white rounded-lg shadow p-4 flex flex-col justify-between h-full';
+                
+                nodeCard.innerHTML = `
+                    <div>
+                        <h2 class="text-lg font-semibold">${node.name}</h2>
+                        <p class="text-sm text-gray-700">Status: <span class="${node.status === 'Ready' ? 'text-green-500' : 'text-red-500'}">${node.status}</span></p>
+                        <p class="text-sm text-gray-700">Address: ${node.address}</p>
+                        <p class="text-sm text-gray-700">OS Image: ${node.os_image}</p>
+                        <p class="text-sm text-gray-700">Kubelet Version: ${node.kubelet_version}</p>
+                    </div>
+                `;
+                container.appendChild(nodeCard);
+            });
+        }
+    
+        webSocket.onclose = function(e) {
+            console.error('WebSocket closed unexpectedly');
+        };
+    });
 </script>
 {% endblock %}
