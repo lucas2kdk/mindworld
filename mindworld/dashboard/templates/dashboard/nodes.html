@@ -1,0 +1,55 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Kubernetes Nodes{% endblock %}
+
+{% block content %}
+<div class="flex-1 px-4 py-4">
+    <h1 class="text-2xl font-semibold mb-4">Kubernetes Nodes</h1>
+    <div id="nodes-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <!-- Nodes will be dynamically inserted here -->
+    </div>
+</div>
+
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+        const wsScheme = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        const webSocket = new WebSocket(wsScheme + window.location.host + '/ws/nodes/');
+    
+        webSocket.onmessage = function(e) {
+            console.log("Received data:", e.data);  // Log for debugging
+            try {
+                const data = JSON.parse(e.data);
+                if (data.type === 'node.status') {
+                    updateNodes(data.data);
+                }
+            } catch (error) {
+                console.error('Error parsing data:', error);
+            }
+        };
+    
+        function updateNodes(nodes) {
+            const container = document.getElementById('nodes-container');
+            container.innerHTML = '';  // Clear existing content
+            nodes.forEach(node => {
+                const nodeCard = document.createElement('div');
+                nodeCard.className = 'bg-white rounded-lg shadow p-4 flex flex-col justify-between h-full';
+                
+                nodeCard.innerHTML = `
+                    <div>
+                        <h2 class="text-lg font-semibold">${node.name}</h2>
+                        <p class="text-sm text-gray-700">Status: <span class="${node.status === 'Ready' ? 'text-green-500' : 'text-red-500'}">${node.status}</span></p>
+                        <p class="text-sm text-gray-700">Address: ${node.address}</p>
+                        <p class="text-sm text-gray-700">OS Image: ${node.os_image}</p>
+                        <p class="text-sm text-gray-700">Kubelet Version: ${node.kubelet_version}</p>
+                    </div>
+                `;
+                container.appendChild(nodeCard);
+            });
+        }
+    
+        webSocket.onclose = function(e) {
+            console.error('WebSocket closed unexpectedly');
+        };
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Edit Minecraft Server{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h1 class="text-2xl font-semibold mb-6">Minecraft Server Console</h1>
+    <div class="bg-black text-white font-mono text-sm p-4 h-96 overflow-auto mb-6" id="console-output">
+        <pre id="console-pre">
+            <!-- Console output will be dynamically updated here -->
+        </pre>
+    </div>
+
+    <div class="mb-4 flex flex-col">
+        <input type="text" id="console-input" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50" placeholder="Enter command...">
+        <button onclick="sendCommand()" class="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Send Command</button>
+    </div>
+
+    <div class="flex gap-4 mb-8">
+        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onclick="manageServer('start')">Start Server</button>
+        <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onclick="manageServer('stop')">Stop Server</button>
+        <button class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded" onclick="manageServer('restart')">Restart Server</button>
+    </div>
+
+    <h2 class="text-2xl font-semibold mb-4">Edit Server Settings</h2>
+    <form action="/path/to/update/server/" method="POST" class="bg-white shadow sm:rounded-lg p-6">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="mb-4">
+                <label for="serverName" class="block text-sm font-medium text-gray-700">Server Name</label>
+                <input type="text" id="serverName" name="serverName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50" required>
+            </div>
+            <div class="mb-4">
+                <label for="serverIP" class="block text-sm font-medium text-gray-700">Server IP</label>
+                <input type="text" id="serverIP" name="serverIP" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50" required>
+            </div>
+            <div class="mb-4">
+                <label for="serverPort" class="block text-sm font-medium text-gray-700">Server Port</label>
+                <input type="number" id="serverPort" name="serverPort" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50" required>
+            </div>
+        </div>
+        <div class="flex items-center justify-start space-x-4">
+            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Save Changes</button>
+            <a href="/servers/" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    const namespace = "{{ namespace }}";
+    const deploymentName = "{{ deployment_name }}";
+    
+    let socket;
+    let heartbeatInterval = null;
+    let lastMessage = "";
+
+    function getCsrfToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
+
+    function startWebSocket() {
+        const wsScheme = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        socket = new WebSocket(`${wsScheme}${window.location.host}/ws/k8s-console/${namespace}/${deploymentName}/`);
+    
+        socket.onopen = function() {
+            console.log("WebSocket connection successfully opened");
+            clearInterval(heartbeatInterval);
+            heartbeatInterval = setInterval(sendHeartbeat, 30000);
+            // Clear the console output on reconnect
+            document.getElementById('console-pre').textContent = '';
+        };
+    
+        socket.onmessage = function(event) {
+            let output = document.getElementById('console-pre');
+            let message = JSON.parse(event.data).message;
+            if (message !== lastMessage) {
+                output.textContent += message + "\n";
+                output.scrollTop = output.scrollHeight;
+                lastMessage = message;
+            }
+        };
+    
+        socket.onclose = function(event) {
+            console.error('WebSocket closed unexpectedly:', event);
+            if (event.code !== 1000) {
+                setTimeout(startWebSocket, 5000);
+            }
+            clearInterval(heartbeatInterval);
+        };
+    
+        socket.onerror = function(error) {
+            console.error('WebSocket error:', error);
+        };
+    }
+    
+    function sendCommand() {
+        let input = document.getElementById('console-input');
+        let command = input.value.trim();
+        if (command) {
+            let message = JSON.stringify({ command: command });
+            socket.send(message);
+            input.value = '';
+        } else {
+            console.log("No command entered.");
+        }
+    }
+    
+    function sendHeartbeat() {
+        if (socket.readyState === WebSocket.OPEN) {
+            socket.send('ping');
+        }
+    }
+    
+    function manageServer(action) {
+        fetch(`/manage-server/${namespace}/${deploymentName}/${action}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCsrfToken(),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.text())
+        .then(data => console.log('Server response:', data))
+        .catch(error => console.error('Error managing server:', error));
+    }
+    
+    document.addEventListener('DOMContentLoaded', startWebSocket);
+</script>
+{% endblock %}
