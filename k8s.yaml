@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: minecraft-server
+spec:
+  serviceName: "minecraft"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minecraft-server
+  template:
+    metadata:
+      labels:
+        app: minecraft-server
+    spec:
+      containers:
+      - name: minecraft-server
+        image: itzg/minecraft-server
+        env:
+        - name: EULA
+          value: "TRUE"
+        - name: MEMORY
+          value: "1G" # example memory setting
+        - name: MAX_PLAYERS
+          value: "20" # example max players setting
+        ports:
+        - containerPort: 25565
+        command: ["/bin/sh", "-c", "apt-get update && apt-get install -y screen && screen -dmS minecraft /start && tail -f /dev/null"]
+  volumeClaimTemplates:
+  - metadata:
+      name: minecraft-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi

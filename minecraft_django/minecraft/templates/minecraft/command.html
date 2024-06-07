@@ -1,0 +1,16 @@
+<!-- minecraft/templates/minecraft/command.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Minecraft Server Command</title>
+</head>
+<body>
+    <h1>Execute Command</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Send Command</button>
+    </form>
+</body>
+</html>

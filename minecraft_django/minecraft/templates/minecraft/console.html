@@ -1,0 +1,29 @@
+<!-- minecraft/templates/minecraft/console.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Minecraft Server Console</title>
+    <script>
+        var socket = new WebSocket('ws://' + window.location.host + '/ws/console/');
+        socket.onmessage = function(event) {
+            var messages = document.getElementById('messages');
+            messages.value += event.data + '\n';
+        };
+        socket.onclose = function(event) {
+            alert('WebSocket connection closed');
+        };
+        function sendCommand() {
+            var commandInput = document.getElementById('commandInput');
+            socket.send(JSON.stringify({'command': commandInput.value}));
+            commandInput.value = '';
+        }
+    </script>
+</head>
+<body>
+    <h1>Minecraft Server Console</h1>
+    <textarea id="messages" rows="20" cols="100" readonly></textarea><br>
+    <input type="text" id="commandInput" placeholder="Enter command">
+    <button onclick="sendCommand()">Send Command</button>
+</body>
+</html>
