@@ -45,24 +45,34 @@ class ConsoleConsumer(AsyncWebsocketConsumer):
         self.thread.start()
 
     async def disconnect(self, close_code):
-        self.ws_client.write_stdin("exit\n")
-        self.ws_client.close()
+        try:
+            self.ws_client.write_stdin("exit\n")
+            self.ws_client.close()
+        except Exception as e:
+            logger.error(f"Error during disconnect: {e}")
 
     async def receive(self, text_data):
-        command = json.loads(text_data).get('command')
-        if command:
-            self.ws_client.write_stdin(command + "\n")
+        try:
+            command = json.loads(text_data).get('command')
+            if command:
+                logger.info(f"Received command: {command}")
+                self.ws_client.write_stdin(command + "\n")
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON decode error: {e}")
+        except Exception as e:
+            logger.error(f"Error writing command to stdin: {e}")
 
     def read_console_output(self):
         try:
             while True:
                 message = self.ws_client.read_stdout()
                 if message:
-                    formatted_message = message.replace("\r", "").replace("\n", "\n")
-                    logger.info(f"Console output: {formatted_message}")
-                    async_to_sync(self.send)(text_data=json.dumps({'message': formatted_message}))
+                    logger.info(f"Console output: {message}")
+                    async_to_sync(self.send)(text_data=json.dumps({'message': message}))
         except WebSocketConnectionClosedException:
             logger.warning("WebSocket connection closed.")
+        except Exception as e:
+            logger.error(f"Error reading console output: {e}")
 
 class ServerStatusConsumer(AsyncWebsocketConsumer):
     async def connect(self):

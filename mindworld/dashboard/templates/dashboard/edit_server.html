@@ -72,11 +72,15 @@
     
         socket.onmessage = function(event) {
             let output = document.getElementById('console-pre');
-            let message = JSON.parse(event.data).message;
-            if (message !== lastMessage) {
-                output.textContent += message + "\n";
-                output.scrollTop = output.scrollHeight;
-                lastMessage = message;
+            try {
+                let message = JSON.parse(event.data).message;
+                if (message !== lastMessage) {
+                    output.textContent += message + "\n";
+                    output.scrollTop = output.scrollHeight;
+                    lastMessage = message;
+                }
+            } catch (e) {
+                console.error('Error parsing WebSocket message:', e);
             }
         };
     
