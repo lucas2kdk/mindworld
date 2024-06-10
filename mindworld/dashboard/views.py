@@ -3,19 +3,17 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 from .forms import CreateServerForm
 from .server_utils import get_statefulsets_managed_by_mindworld, scale_statefulset, create_or_update_statefulset_and_service
+from django.contrib.auth.decorators import login_required
 
+@login_required
 def home(request):
     return render(request, 'dashboard/dashboard.html')
 
-def user_signup(request):
-    return render(request, 'dashboard/signup.html')
-
-def user_login(request):
-    return render(request, 'dashboard/login.html')
-
+@login_required
 def nodes(request):
     return render(request, 'dashboard/nodes.html')
 
+@login_required
 def create_server(request):
     if request.method == "POST":
         form = CreateServerForm(request.POST)
@@ -36,23 +34,28 @@ def create_server(request):
 
     return render(request, 'dashboard/create_server.html', {'form': form})
 
+@login_required
 def start_server(request, namespace, name):
     scale_statefulset(namespace, name, replicas=1)
     return redirect('home')
 
+@login_required
 def stop_server(request, namespace, name):
     scale_statefulset(namespace, name, replicas=0)
     return redirect('home')
 
+@login_required
 def restart_server(request, namespace, name):
     scale_statefulset(namespace, name, replicas=0)
     scale_statefulset(namespace, name, replicas=1)
     return redirect('home')
 
+@login_required
 def get_server_status(request):
     servers = get_statefulsets_managed_by_mindworld()
     return JsonResponse(servers, safe=False)
 
+@login_required
 def edit_server(request, namespace, name):
     context = {
         'namespace': namespace,
@@ -60,6 +63,7 @@ def edit_server(request, namespace, name):
     }
     return render(request, 'dashboard/edit_server.html', context)
 
+@login_required
 def manage_server(request, namespace, name, action):
     if request.method == 'POST':
         if action == 'start':

@@ -13,13 +13,22 @@ CONTAINER_NAME = os.getenv('CONTAINER_NAME', 'minecraft-server')
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+# def load_kube_config():
+#     """Load Kubernetes configuration."""
+#     try:
+#         config.load_kube_config()
+#         #logger.info("Kubernetes configuration loaded successfully.")
+#     except Exception as e:
+#         #logger.error(f"Failed to load Kubernetes configuration: {e}")
+#         raise
+
 def load_kube_config():
     """Load Kubernetes configuration."""
     try:
-        config.load_kube_config()
-        #logger.info("Kubernetes configuration loaded successfully.")
+        config.load_incluster_config()
+        logger.info("Kubernetes configuration loaded successfully.")
     except Exception as e:
-        #logger.error(f"Failed to load Kubernetes configuration: {e}")
+        logger.error(f"Failed to load Kubernetes configuration: {e}")
         raise
 
 def get_statefulsets_managed_by_mindworld():
